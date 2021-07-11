@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Remotely.Agent.Interfaces;
@@ -21,6 +22,7 @@ namespace Remotely.Tests
     {
         public static IServiceProvider ServiceProvider { get; set; }
         private static IWebHostBuilder builder;
+        public IConfiguration Configuration { get; }        
 
         public static void Activate()
         {
@@ -62,8 +64,9 @@ namespace Remotely.Tests
             services.AddTransient<IDataService, DataService>();
             services.AddTransient<IApplicationConfig, ApplicationConfig>();
             services.AddTransient<IEmailSenderEx, EmailSenderEx>();
+            services.AddScoped<IModalService, ModalService>();
 
-            if (EnvironmentHelper.IsWindows)
+            if(EnvironmentHelper.IsWindows)
             {
                 services.AddTransient<IDeviceInformationService, DeviceInformationServiceWin>();
             }

@@ -8,6 +8,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Bunit;
+using Remotely.Server.Pages;
+using Moq;
+using Remotely.Server.Areas.Identity;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Remotely.Server.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.VisualStudio.TestPlatform.TestHost;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Remotely.Tests
 {
@@ -17,7 +28,11 @@ namespace Remotely.Tests
         private IDataService _dataService;
         private IDeviceInformationService _deviceInfo;
         private TestData _testData;
-
+        private IConfiguration Configuration { get; }
+        public DataServiceTests(IConfiguration configuration, IWebHostEnvironment env)
+        {
+            Configuration = configuration;
+        }
         [TestMethod]
         public async Task AddAlert()
         {
@@ -241,6 +256,41 @@ namespace Remotely.Tests
             };
 
             Assert.IsTrue(orgIDs.All(x => x == _testData.OrganizationID));
+        }
+        [TestMethod]
+        public void GetApiKey()
+        {
+            using var ctx = new Bunit.TestContext();
+            //            new Remotely.Tests.Startup().ConfigureServices(ctx.Services);
+            //ctx.Services.AddScoped<IModalService, ModalService>();
+            ctx.Services.AddScoped<IJsInterop, JsInterop>();
+            //ctx.Services.AddTransient<IDataService, DataService>();
+            //ctx.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<RemotelyUser>>();
+            var services = ctx.Services;
+            services.AddDbContextFactory<AppDb>(options =>
+            {
+                options.UseInMemoryDatabase("Remotely");
+            });
+            services.AddScoped(p =>
+                p.GetRequiredService<IDbContextFactory<AppDb>>().CreateDbContext());
+            //services.AddIdentity<RemotelyUser, IdentityRole>(options => options.Stores.MaxLengthForKeys = 128)
+            // .AddEntityFrameworkStores<AppDb>()
+            // .AddDefaultUI()
+            // .AddDefaultTokenProviders();
+
+            services.AddTransient<IDataService, DataService>();
+            services.AddTransient<IApplicationConfig, ApplicationConfig>();
+            services.AddTransient<IEmailSenderEx, EmailSenderEx>();
+            services.AddScoped<IModalService, ModalService>();
+            services.AddSingleton<IConfiguration>(Configuration);
+
+
+            IoCActivator.ServiceProvider = services.BuildServiceProvider();
+            var cut = ctx.RenderComponent<ApiKeys>();
+            var createApiKeyButton = cut.Find("form-control form-control-sm custom-control-inline mr-1");
+            createApiKeyButton.Click();
+            var renderedMarkup = cut.Markup;
+            Assert.AreEqual("<h1>Hello world from Blazor</h1>", renderedMarkup);
         }
     }
 }
