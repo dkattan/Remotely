@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Remotely.Server.Auth;
 using Remotely.Server.Hubs;
 using Remotely.Server.Models;
 
@@ -12,6 +13,7 @@ namespace Remotely.Server.API
 {
     [Route("api/[controller]")]
     [ApiController]
+    [ServiceFilter(typeof(ApiAuthorizationFilter))]
     public class SessionController : ControllerBase
     {
         
